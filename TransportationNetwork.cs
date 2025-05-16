@@ -67,11 +67,13 @@ namespace assignment3A
             foreach(string network in networks)
             {
                 char[] charArray = network.ToCharArray();
-                int[] index = DistanceMatrix(charArray);
+                int[] index = ntwArrayToDistanceMatrix(charArray);
                 distances[index[0], index[1]] = Convert.ToUInt32(charArray[2].ToString());
                 distances[index[1], index[0]] = Convert.ToUInt32(charArray[2].ToString());
             }
-              return true;
+
+            polishDistanceMatrix(); //Polish the distance matrix to remove any 0s that are not roads
+            return true;
         }
 
         /// <summary>
@@ -89,7 +91,12 @@ namespace assignment3A
             return line;
         }
 
-        private int[] DistanceMatrix(char[] charArray)
+        /// <summary>
+        /// Returns the index of the suburbs in the distances matrix.
+        /// </summary>
+        /// <param name="charArray"></param>
+        /// <returns></returns>
+        private int[] ntwArrayToDistanceMatrix(char[] charArray)
         {
             int row = 0;
             int col = 0;
@@ -99,19 +106,62 @@ namespace assignment3A
             return new int[] { row, col };
         }
 
+        /// <summary>
+        /// To polish the distance matrix to remove any 0s that are not roads.
+        /// </summary>
+        private void polishDistanceMatrix()
+        {
+            for (int i = 0; i < suburbs.Length; i++)
+            {
+                for (int j = 0; j < suburbs.Length; j++)
+                {
+                    if (distances[i, j] == 0)
+                    {
+                        distances[i, j] = NO_ROAD;
+                    }
+                }
+            }
+        }
+
         //Save information about the transportation network to a text file, filePath  
         //Preconditions: a transportation network has been loaded and is valid.
         //Postconditions: return true, if the information about this transportation network has been successfully saved to the given text file;
         //                otherwise, return false. This transportation network remains unchanged.    
         public bool SaveTransportationNetwork(string filePath)
         {
-            StreamWriter sw = new StreamWriter(filePath);
-            string[] networks = new string[] {"TESTING", "123"};
-            foreach(string network in networks)
+            using (StreamWriter sw = new StreamWriter(filePath))
             {
-                sw.WriteLine(network);
+                string[] allNetworks = distanceMatrixToNtwArray();
+                foreach (string network in allNetworks)
+                {
+                    sw.WriteLine(network);
+                }
+                sw.Close();
             }
             return true;
+        }
+
+        /// <summary>
+        /// Returns the distance matrix to a string array of networks.
+        /// </summary>
+        /// <returns></returns>
+        private string[] distanceMatrixToNtwArray()
+        {
+            List<string> ntwArray = new List<string>();
+            for (int i = 0; i < suburbs.Length; i++) //i for row
+            {
+                for (int j = i; j < suburbs.Length; j++) //j for column
+                {
+                    if (suburbs[i] == suburbs[j] || distances[i, j] == 0)
+                        continue; //Skip if the suburbs are the same
+                    if (distances[i, j] != NO_ROAD)
+                    {
+                        string lineString = $"{suburbs[i]},{suburbs[j]},{distances[i, j]}";
+                        ntwArray.Add(lineString); //Add the line to the list of networks
+                    }
+                }
+            }
+            return ntwArray.ToArray(); //Convert the list of networks to an array of strings
         }
 
         //Add a new road between suburb 1 and suburb 2 to the transportation network   
