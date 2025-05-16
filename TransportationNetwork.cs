@@ -31,8 +31,72 @@ namespace assignment3A
         //                otherwise, return false and both suburbs and distances are null.
         public bool LoadTransportationNetwork(string filePath)
         {
-            //To be completed by students
-            throw new NotImplementedException("LoadTransportationNetwork is not implemented");
+            StreamReader sr = new StreamReader(filePath);
+            List<char> tempSub = [];
+            List<string> networks = new List<string>();
+
+            string? line = sr.ReadLine();
+            do
+            {
+                line = line.Replace(" ", "");
+                line = line.Replace(",", "");
+                char[] charArray = line.ToCharArray(); //Parse current line into a char array
+                networks.Add(charArrToString(charArray)); //Add the charArray parsed string to the list of networks
+                Console.WriteLine(line);
+
+                for (int i = 0; i < 2; i++)
+                {
+                    if (!tempSub.Contains(charArray[i]))
+                    {
+                        tempSub.Add(charArray[i]);
+                    }
+                }
+                line = sr.ReadLine();
+            }
+            while (line != null);
+
+            tempSub.Sort();
+            suburbs = new string[tempSub.Count];
+            for(int i = 0; i < tempSub.Count; i++)
+            {
+                suburbs[i] = tempSub[i].ToString();
+            }
+            sr.Close();
+
+            distances = new uint[tempSub.Count, tempSub.Count];
+            foreach(string network in networks)
+            {
+                char[] charArray = network.ToCharArray();
+                int[] index = DistanceMatrix(charArray);
+                distances[index[0], index[1]] = Convert.ToUInt32(charArray[2].ToString());
+                distances[index[1], index[0]] = Convert.ToUInt32(charArray[2].ToString());
+            }
+              return true;
+        }
+
+        /// <summary>
+        /// Returns a string of the parsed input charArray of a specific line.
+        /// </summary>
+        /// <param name="charArray"></param>
+        /// <returns></returns>
+        private string charArrToString(char[] charArray)
+        {
+            string line = string.Empty;
+            for (int i = 0; i < charArray.Length; i++)
+            {
+                line += charArray[i].ToString();
+            }
+            return line;
+        }
+
+        private int[] DistanceMatrix(char[] charArray)
+        {
+            int row = 0;
+            int col = 0;
+            row = Array.IndexOf(suburbs, charArray[0].ToString()); 
+            col = Array.IndexOf(suburbs, charArray[1].ToString());
+
+            return new int[] { row, col };
         }
 
         //Save information about the transportation network to a text file, filePath  
@@ -41,8 +105,13 @@ namespace assignment3A
         //                otherwise, return false. This transportation network remains unchanged.    
         public bool SaveTransportationNetwork(string filePath)
         {
-            //To be completed by students
-            throw new NotImplementedException("SaveTransportationNetwork is not implemented");
+            StreamWriter sw = new StreamWriter(filePath);
+            string[] networks = new string[] {"TESTING", "123"};
+            foreach(string network in networks)
+            {
+                sw.WriteLine(network);
+            }
+            return true;
         }
 
         //Add a new road between suburb 1 and suburb 2 to the transportation network   
