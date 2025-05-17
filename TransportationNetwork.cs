@@ -77,7 +77,7 @@ namespace assignment3A
         }
 
         /// <summary>
-        /// Returns a string of the parsed input charArray of a specific line.
+        /// Returns a string of the parsed input charArray of a specific line. (e.g. {A, B, 5} -> "AB5")
         /// </summary>
         /// <param name="charArray"></param>
         /// <returns></returns>
@@ -170,8 +170,37 @@ namespace assignment3A
         //                return false, if the road is not new or suburb1 or suburb2 is not in the transportation network, and this transportation network remains unchanged. 
         public bool AddRoad(string suburb1, string suburb2, uint distance)
         {
-            //To be completed by students
-            throw new NotImplementedException("AddRoad is not implemented");
+            int row = 0;
+            int col = 0;
+            //To check if the suburbs are valid and distance is greater than 0
+            if (suburb1[0] == suburb2[0] || !char.IsLetter(suburb1[0]) || !char.IsLetter(suburb2[0]) || distance <= 0)
+            {
+                return false;
+            }
+            else if (findRoad(suburb1[0], suburb2[0], ref row, ref col))
+            {
+                return false; //If the road already exists, return false
+            }
+            else
+            {
+                distances[row, col] = distance; //Add the new road to the distance matrix
+                distances[col, row] = distance; //Add the new road to the distance matrix (for both directions)
+                return true; //If the road does not exist(then road will be add in above elseif), return true
+            }
+        }
+
+        private bool findRoad(char suburb1, char suburb2, ref int row, ref int col)
+        {
+            row = Array.IndexOf(suburbs, suburb1.ToString());
+            col = Array.IndexOf(suburbs, suburb2.ToString());
+            if (distances[row, col] != NO_ROAD) //If the distance is not equal to the sentinel value, the road exists
+            {
+                return true;
+            }
+            else
+            {
+                return false; //If the distance is equal to the sentinel value, the road does not exist
+            }
         }
 
         //Remove an existing road from the transportation network   
@@ -180,8 +209,18 @@ namespace assignment3A
         //                otherwise, return false, the transportation network remains unchanged.    
         public bool RemoveRoad(string suburb1, string suburb2)
         {
-            //To be completed by students
-            throw new NotImplementedException("RemoveRoad is not implemented");
+            int row = 0;
+            int col = 0;
+            if (!findRoad(suburb1[0], suburb2[0], ref row, ref col))
+            {
+                return false; //If the road does not exist, return false
+            }
+            else
+            {
+                distances[row, col] = NO_ROAD; //Add the new road to the distance matrix
+                distances[col, row] = NO_ROAD; //Add the new road to the distance matrix (for both directions)
+                return true; //If the road exists, remove the road and return true
+            }
         }
 
         //Check if this transportation network is connected. A transportation network is connected, if there is a path from any suburb to all other suburbs in this transportation network. 
