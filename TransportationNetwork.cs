@@ -57,14 +57,14 @@ namespace assignment3A
 
             tempSub.Sort();
             suburbs = new string[tempSub.Count];
-            for(int i = 0; i < tempSub.Count; i++)
+            for (int i = 0; i < tempSub.Count; i++)
             {
                 suburbs[i] = tempSub[i].ToString();
             }
             sr.Close();
 
             distances = new uint[tempSub.Count, tempSub.Count];
-            foreach(string network in networks)
+            foreach (string network in networks)
             {
                 char[] charArray = network.ToCharArray();
                 int[] index = ntwArrayToDistanceMatrix(charArray);
@@ -100,7 +100,7 @@ namespace assignment3A
         {
             int row = 0;
             int col = 0;
-            row = Array.IndexOf(suburbs, charArray[0].ToString()); 
+            row = Array.IndexOf(suburbs, charArray[0].ToString());
             col = Array.IndexOf(suburbs, charArray[1].ToString());
 
             return new int[] { row, col };
@@ -228,8 +228,38 @@ namespace assignment3A
         //Postconditions: return true, if this transportation network is connected; otherwise, return false. This transportation network remains unchanged.
         public bool IsConnected()
         {
-            //To be completed by students
-            throw new NotImplementedException("IsConnected is not implemented");
+            List<string> allRoads = distanceMatrixToNtwArray().ToList(); //Get the list of all roads in the transportation network
+            List<char> visited = new List<char>(); //List to store visited suburbs
+            for (int i = 0; i < suburbs.Length; i++)
+            {
+                for (int j = 0; j < suburbs.Length; j++)
+                {
+                    string road = $"{suburbs[i]},{suburbs[j]},{distances[i, j]}"; //Get the road between the two suburbs
+                    string roadReverse = $"{suburbs[j]},{suburbs[i]},{distances[j, i]}"; //Get the road between the two suburbs in reverse order
+                    if (allRoads.Contains(road) || allRoads.Contains(roadReverse)) //If the road exists in either direction
+                    {
+                        if (!visited.Contains(suburbs[i][0])) //If the suburb has not been visited
+                        {
+                            visited.Add(suburbs[i][0]); //Add the suburb to the list of visited suburbs
+                        }
+                        if (!visited.Contains(suburbs[j][0])) //If the suburb has not been visited
+                        {
+                            visited.Add(suburbs[j][0]); //Add the suburb to the list of visited suburbs
+                        }
+                        allRoads.Remove(road); //Remove the road from the list of all roads
+                        allRoads.Remove(roadReverse); //Remove the road from the list of all roads in reverse order
+                    }
+
+                }
+            }
+            if (visited.Count == suburbs.Length) //If all suburbs have been visited
+            {
+                return true; //Return true, the transportation network is connected
+            }
+            else
+            {
+                return false; //Return false, the transportation network is not connected
+            }
         }
 
         // Searches for the shortest path between startSuburb and endSuburb. The total distance between these two suburbs is saved in the "distance" output variable.
