@@ -177,7 +177,7 @@ namespace assignment3A
             {
                 return false;
             }
-            else if (findRoad(suburb1[0], suburb2[0], ref row, ref col))
+            else if (findRoad(suburb1[0], suburb2[0], out row, out col))
             {
                 return false; //If the road already exists, return false
             }
@@ -189,7 +189,7 @@ namespace assignment3A
             }
         }
 
-        private bool findRoad(char suburb1, char suburb2, ref int row, ref int col)
+        private bool findRoad(char suburb1, char suburb2, out int row, out int col)
         {
             row = Array.IndexOf(suburbs, suburb1.ToString());
             col = Array.IndexOf(suburbs, suburb2.ToString());
@@ -211,7 +211,7 @@ namespace assignment3A
         {
             int row = 0;
             int col = 0;
-            if (!findRoad(suburb1[0], suburb2[0], ref row, ref col))
+            if (!findRoad(suburb1[0], suburb2[0], out row, out col))
             {
                 return false; //If the road does not exist, return false
             }
@@ -267,8 +267,43 @@ namespace assignment3A
         // Postconditions: return true and a shortest path via the out parametre *path*, and the shortest distance via the out parametre *distance* if there exists a path between startSuburb and endSuburb; otherwise, return false, path = null, and distance = Int32.MaxValue.
         public bool FindShortestPath(string startSuburb, string endSuburb, out List<string>? path, out uint distance)
         {
-            //To be completed by students
-            throw new NotImplementedException("FindShortestPath is not implemented");
+            if (!suburbs.Contains(startSuburb) || !suburbs.Contains(endSuburb) || startSuburb == endSuburb)
+            {
+                path = null; //If the suburbs are not in the list or the suburbs are the same, return null
+                distance = NO_ROAD; //Set the distance to the sentinel value
+                return false; //Return false, no path exists
+            }
+            else
+            {
+                List<string> shortestPath = new List<string>(); //List to store the shortest path
+
+
+
+                path = shortestPath;
+                distance = 0;
+                return true;
+            }
+        }
+
+        private uint[,] FloydWarshall()
+        {
+            uint[,]? shortDistance = distances; //Create a copy of the distance matrix
+
+            for (int k = 1; k <= suburbs.Length; k++) //Loop through the suburbs
+            {
+                for (int i = 1; i <= suburbs.Length; i++) //Loop through the suburbs
+                {
+                    for (int j = 1; j <= suburbs.Length; j++) //Loop through the suburbs
+                    {
+                        if (shortDistance[i, j] > shortDistance[i, k] + shortDistance[k, j]) //If the distance is greater than the sum of the two distances
+                        {
+                            shortDistance[i, j] = uint.Min(shortDistance[i, j], shortDistance[i, k] + shortDistance[k, j]); //Set the distance to the sum of the two distances
+
+                        }
+                    }
+                }
+            }
+            return shortDistance; //Return the distance matrix
         }
 
         //Find the minimum backbone transportation network (the minimum spanning tree)
@@ -276,8 +311,12 @@ namespace assignment3A
         //Postconditions: return an array of roads, forming a minimum spanning tree of the transportation network, if the pre-conditions are true; otherwise, return null.
         public List<Road>? IdentifyMinimumBackboneInfrastructure()
         {
-            //To be completed by students
-            throw new NotImplementedException("IdentifyMinimumBackboneInfrastructure is not implemented");
+            if (!IsConnected()) return null; //If the transportation network is not connected, return null
+
+            else
+            {
+                List<Road> minBackbone = new List<Road>(); //List to store the minimum backbone roads
+            }
         }
     }
 }
