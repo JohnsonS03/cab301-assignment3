@@ -203,24 +203,28 @@ namespace assignment3A
             }
         }
 
+        /// <summary>
+        /// Check if there is other adjacent road to each suburb other than the connecting road between them,
+        /// return true if there is each suburb is connected with other suburbs, false if the connecting road is the only path bwtween both suburbs.
+        /// </summary>
+        /// <param name="suburb1"></param>
+        /// <param name="suburb2"></param>
+        /// <returns></returns>
         private bool moreThanOneRoad(char suburb1, char suburb2)
         {
-            int row = 0;
-            int col = 0;
             int sub1AdjacentRoad = 0;
             int sub2AdjacentRoad = 0;
             for (int i = 0; i < suburbs.Length; i++)
             {
-                if (findRoad(suburb1, suburbs[i][0], out row, out col))
+                if (findRoad(suburb1, suburbs[i][0], out _, out _))
                 {
                     sub1AdjacentRoad++;
                 }
-                if (findRoad(suburb2, suburbs[i][0], out row, out col))
+                if (findRoad(suburb2, suburbs[i][0], out _, out _))
                 {
                     sub2AdjacentRoad++;
                 }
             }
-
             if(sub1AdjacentRoad > 1 && sub2AdjacentRoad > 1) return true;
             else return false;
         }
