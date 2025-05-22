@@ -341,13 +341,19 @@ namespace assignment3A
         //Postconditions: return an array of roads, forming a minimum spanning tree of the transportation network, if the pre-conditions are true; otherwise, return null.
         public List<Road>? IdentifyMinimumBackboneInfrastructure()
         {
-            if (!IsConnected()) return null; //If the transportation network is not connected, return null
-
-            else
+            List<string[]> adjacentPaths = new List<string[]>();
+            for (int i = 0; i < suburbs.Length; i++)//loop and assign the first node of the tree
             {
-                List<Road> minBackbone = new List<Road>(); //List to store the minimum backbone roads
+
             }
-            return new List<Road> { };
         }
+
+        private List<string[]> theAdjacents()
+        {
+            List<string[]> adjacents = new List<string[]>();
+            foreach ()
+        }
+
+        private List<string[]> 
     }
 }
