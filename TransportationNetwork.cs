@@ -203,6 +203,28 @@ namespace assignment3A
             }
         }
 
+        private bool moreThanOneRoad(char suburb1, char suburb2)
+        {
+            int row = 0;
+            int col = 0;
+            int sub1AdjacentRoad = 0;
+            int sub2AdjacentRoad = 0;
+            for (int i = 0; i < suburbs.Length; i++)
+            {
+                if (findRoad(suburb1, suburbs[i][0], out row, out col))
+                {
+                    sub1AdjacentRoad++;
+                }
+                if (findRoad(suburb2, suburbs[i][0], out row, out col))
+                {
+                    sub2AdjacentRoad++;
+                }
+            }
+
+            if(sub1AdjacentRoad > 1 && sub2AdjacentRoad > 1) return true;
+            else return false;
+        }
+
         //Remove an existing road from the transportation network   
         //Preconditions: both suburb1 and suburb2 are connected by at least two roads
         //Postconditions: return true, the road (suburb1, suburb2) has been removed from the transportation network if the road exists; 
@@ -217,9 +239,13 @@ namespace assignment3A
             }
             else
             {
-                distances[row, col] = NO_ROAD; //Add the new road to the distance matrix
-                distances[col, row] = NO_ROAD; //Add the new road to the distance matrix (for both directions)
-                return true; //If the road exists, remove the road and return true
+                if (moreThanOneRoad(suburb1[0], suburb2[0]))
+                {
+                    distances[row, col] = NO_ROAD; //Add the new road to the distance matrix
+                    distances[col, row] = NO_ROAD; //Add the new road to the distance matrix (for both directions)
+                    return true; //If the road exists, remove the road and return true
+                }
+                else { return false; }
             }
         }
 
@@ -317,6 +343,7 @@ namespace assignment3A
             {
                 List<Road> minBackbone = new List<Road>(); //List to store the minimum backbone roads
             }
+            return new List<Road> { };
         }
     }
 }
