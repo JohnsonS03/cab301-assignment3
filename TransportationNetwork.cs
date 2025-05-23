@@ -31,47 +31,55 @@ namespace assignment3A
         //                otherwise, return false and both suburbs and distances are null.
         public bool LoadTransportationNetwork(string filePath)
         {
-            StreamReader sr = new StreamReader(filePath);
-            List<char> tempSub = [];
-            List<string> networks = new List<string>();
-
-            string? line = sr.ReadLine();
-            do
+            try 
             {
-                line = line.Replace(" ", "");
-                line = line.Replace(",", "");
-                char[] charArray = line.ToCharArray(); //Parse current line into a char array
-                networks.Add(charArrToString(charArray)); //Add the charArray parsed string to the list of networks
-                Console.WriteLine(line);
+                StreamReader sr = new StreamReader(filePath);
+                List<char> tempSub = [];
+                List<string> networks = new List<string>();
 
-                for (int i = 0; i < 2; i++)
+                string? line = sr.ReadLine();
+                do
                 {
-                    if (!tempSub.Contains(charArray[i]))
+                    line = line.Replace(" ", "");
+                    line = line.Replace(",", "");
+                    char[] charArray = line.ToCharArray(); //Parse current line into a char array
+                    networks.Add(charArrToString(charArray)); //Add the charArray parsed string to the list of networks
+
+                    for (int i = 0; i < 2; i++)
                     {
-                        tempSub.Add(charArray[i]);
+                        if (!tempSub.Contains(charArray[i]))
+                        {
+                            tempSub.Add(charArray[i]);
+                        }
                     }
+                    line = sr.ReadLine();
                 }
-                line = sr.ReadLine();
-            }
-            while (line != null);
+                while (line != null);
 
-            tempSub.Sort();
-            suburbs = new string[tempSub.Count];
-            for (int i = 0; i < tempSub.Count; i++)
+                tempSub.Sort();
+                suburbs = new string[tempSub.Count];
+                for (int i = 0; i < tempSub.Count; i++)
+                {
+                    suburbs[i] = tempSub[i].ToString();
+                }
+                sr.Close();
+                distances = new uint[tempSub.Count, tempSub.Count];
+                foreach (string network in networks)
+                {
+                    char[] charArray = network.ToCharArray();
+                    int[] index = ntwArrayToDistanceMatrix(charArray);
+                    string distance = new string(charArray);
+                    distances[index[0], index[1]] = uint.Parse(distance.Substring(2));
+                    distances[index[1], index[0]] = uint.Parse(distance.Substring(2));
+                }
+
+            }
+            catch (Exception e)
             {
-                suburbs[i] = tempSub[i].ToString();
+                Console.WriteLine("File did not read successfully");
+                return false;
             }
-            sr.Close();
-
-            distances = new uint[tempSub.Count, tempSub.Count];
-            foreach (string network in networks)
-            {
-                char[] charArray = network.ToCharArray();
-                int[] index = ntwArrayToDistanceMatrix(charArray);
-                distances[index[0], index[1]] = Convert.ToUInt32(charArray[2].ToString());
-                distances[index[1], index[0]] = Convert.ToUInt32(charArray[2].ToString());
-            }
-
+            
             polishDistanceMatrix(); //Polish the distance matrix to remove any 0s that are not roads
             return true;
         }
@@ -189,6 +197,14 @@ namespace assignment3A
             }
         }
 
+        /// <summary>
+        /// Returns true if the road exists between suburb1 and suburb2, false if the road does not exist.
+        /// </summary>
+        /// <param name="suburb1"></param>
+        /// <param name="suburb2"></param>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
         private bool findRoad(char suburb1, char suburb2, out int row, out int col)
         {
             row = Array.IndexOf(suburbs, suburb1.ToString());
@@ -225,7 +241,7 @@ namespace assignment3A
                     sub2AdjacentRoad++;
                 }
             }
-            if(sub1AdjacentRoad > 1 && sub2AdjacentRoad > 1) return true;
+            if (sub1AdjacentRoad > 1 && sub2AdjacentRoad > 1) return true;
             else return false;
         }
 
@@ -297,43 +313,76 @@ namespace assignment3A
         // Postconditions: return true and a shortest path via the out parametre *path*, and the shortest distance via the out parametre *distance* if there exists a path between startSuburb and endSuburb; otherwise, return false, path = null, and distance = Int32.MaxValue.
         public bool FindShortestPath(string startSuburb, string endSuburb, out List<string>? path, out uint distance)
         {
-            if (!suburbs.Contains(startSuburb) || !suburbs.Contains(endSuburb) || startSuburb == endSuburb)
+            int n = distances.GetLength(0); //Get the number of suburbs
+            uint[] dist = new uint[n]; //Create an array to store the distance from the start suburb to each suburb
+            int[] prev = new int[n]; //Create an array to store the previous suburb for each suburb
+            bool[] visited = new bool[n]; //Create a boolean array to store visited suburbs
+            const uint INF = uint.MaxValue; //Set the sentinel value to the maximum value of an unsigned integer
+
+            for (int i = 0; i < n; i++)
             {
-                path = null; //If the suburbs are not in the list or the suburbs are the same, return null
-                distance = NO_ROAD; //Set the distance to the sentinel value
-                return false; //Return false, no path exists
+                dist[i] = INF; //Set the distance to the sentinel value
+                prev[i] = -1; //Set the previous suburb to -1
+                visited[i] = false; //Set the suburb to not visited
             }
-            else
+            dist[Array.IndexOf(suburbs, startSuburb)] = 0;
+
+            for (int count = 0; count < n - 1; count++)
             {
-                List<string> shortestPath = new List<string>(); //List to store the shortest path
-
-
-
-                path = shortestPath;
-                distance = 0;
-                return true;
-            }
-        }
-
-        private uint[,] FloydWarshall()
-        {
-            uint[,]? shortDistance = distances; //Create a copy of the distance matrix
-
-            for (int k = 1; k <= suburbs.Length; k++) //Loop through the suburbs
-            {
-                for (int i = 1; i <= suburbs.Length; i++) //Loop through the suburbs
+                int u = -1; //Set the suburb to -1
+                uint min = INF; //Set the minimum distance to the sentinel value
+                for (int v = 0; v < n; v++) //Loop through the suburbs
                 {
-                    for (int j = 1; j <= suburbs.Length; j++) //Loop through the suburbs
+                    if (!visited[v] && dist[v] < min) //If the suburb has not been visited and the distance is less than the current minimum distance
                     {
-                        if (shortDistance[i, j] > shortDistance[i, k] + shortDistance[k, j]) //If the distance is greater than the sum of the two distances
-                        {
-                            shortDistance[i, j] = uint.Min(shortDistance[i, j], shortDistance[i, k] + shortDistance[k, j]); //Set the distance to the sum of the two distances
+                        min = dist[v]; //Set the minimum distance to the current distance
+                        u = v; //Set the suburb to the current suburb
+                    }
+                }
 
+                if (u == -1) //If the suburb is -1, there are no more suburbs to visit
+                {
+                    break; //Break the loop
+                }
+
+                visited[u] = true; //Set the suburb to visited
+
+                for (int v = 0; v < n; v++) //Loop through the suburbs
+                {
+                    if (distances[u, v] > 0 && !visited[v])
+                    {
+                        uint alt = dist[u] + distances[u, v]; //Calculate the alternative distance
+                        if (alt < dist[v])
+                        {
+                            dist[v] = alt;
+                            prev[v] = u; //Set the previous suburb to the current suburb
                         }
                     }
                 }
             }
-            return shortDistance; //Return the distance matrix
+
+            List<int> thePath = new List<int>(); //Create a list to store the path
+            for (int at = Array.IndexOf(suburbs, endSuburb); at != -1; at = prev[at]) //Loop through the suburbs
+            {
+                thePath.Insert(0, at); //Insert the suburb at the beginning of the list
+            }
+
+            if (dist[Array.IndexOf(suburbs, endSuburb)] == INF) //If the distance is equal to the sentinel value, there is no path
+            {
+                path = null; //Set the path to null
+                distance = INF; //Set the distance to the sentinel value
+                return false; //Return false, there is no path
+            }
+            else
+            {
+                for (int i = 0; i < thePath.Count; i++) //Loop through the path
+                {
+                    thePath[i] = Array.IndexOf(suburbs, suburbs[thePath[i]]); //Get the index of the suburb in the suburbs array
+                }
+                path = thePath.ConvertAll(x => suburbs[x]); //Convert the path to a list of suburb names
+                distance = dist[Array.IndexOf(suburbs, endSuburb)]; //Get the distance from the start suburb to the end suburb
+                return true; //Return true, the path exists
+            }
         }
 
         //Find the minimum backbone transportation network (the minimum spanning tree)
@@ -341,19 +390,58 @@ namespace assignment3A
         //Postconditions: return an array of roads, forming a minimum spanning tree of the transportation network, if the pre-conditions are true; otherwise, return null.
         public List<Road>? IdentifyMinimumBackboneInfrastructure()
         {
-            List<string[]> adjacentPaths = new List<string[]>();
-            for (int i = 0; i < suburbs.Length; i++)//loop and assign the first node of the tree
+            int n = distances.GetLength(0); //Get the number of suburbs
+            bool[] visited = new bool[n]; //Create a boolean array to store visited suburbs
+            uint[] minEdge = new uint[n]; //Create an array to store the minimum edge for each suburb
+            int[] parent = new int[n]; //Create an array to store the parent of each suburb
+
+            const uint INF = uint.MaxValue; //Set the sentinel value to the maximum value of an unsigned integer
+            for (int i = 0; i < n; i++)
             {
-
+                minEdge[i] = INF; //Set the minimum edge to the sentinel value
+                parent[i] = -1; //Set the parent to -1
+                visited[i] = false; //Set the suburb to not visited
             }
-        }
 
-        private List<string[]> theAdjacents()
-        {
-            List<string[]> adjacents = new List<string[]>();
-            foreach ()
-        }
+            minEdge[0] = 0; //Set the first suburb to be visited
 
-        private List<string[]> 
+            for (int count = 0; count < n - 1; count++) //Loop through the suburbs
+            {
+                uint min = INF; //Set the minimum edge to the sentinel value
+                int u = -1; //Set the suburb to -1
+                for (int v = 0; v < n; v++) //Loop through the suburbs
+                {
+                    if (!visited[v] && minEdge[v] < min) //If the suburb has not been visited and the minimum edge is less than the current minimum edge
+                    {
+                        min = minEdge[v]; //Set the minimum edge to the current minimum edge
+                        u = v; //Set the suburb to the current suburb
+                    }
+                }
+                if (u == -1) //If the suburb is -1, there are no more suburbs to visit
+                {
+                    break; //Break the loop
+                }
+                visited[u] = true; //Set the suburb to visited
+                for (int v = 0; v < n; v++) //Loop through the suburbs
+                {
+                    if (!visited[v] && distances[u, v] != NO_ROAD && distances[u, v] < minEdge[v]) //If the suburb has not been visited and the distance is not equal to the sentinel value and the distance is less than the current minimum edge
+                    {
+                        parent[v] = u; //Set the parent of the suburb to the current suburb
+                        minEdge[v] = distances[u, v]; //Set the minimum edge to the distance
+                    }
+                }
+            }
+
+            List<Road> minBackbone = new List<Road>(); //Create a list to store the minimum backbone roads
+            for (int i = 1; i < n; i++) //Loop through the suburbs
+            {
+                int from = parent[i]; //Get the parent of the suburb
+                int to = i; //Get the suburb
+                uint distance = distances[to, from]; //Get the distance between the two suburbs
+                minBackbone.Add(new Road(suburbs[from], suburbs[to], distance)); //Add the road to the list of minimum backbone roads
+            }
+
+            return minBackbone;
+        }
     }
 }
